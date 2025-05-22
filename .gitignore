@@ -1,6 +1,18 @@
-/static
-/greatcart/static
+# Virtual environment
+.venv/
+venv/
 
-/.venv
-
+# SQLite DB
 db.sqlite3
+
+# Static files (if generated)
+static/
+greatcart/static/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# VS Code and system files
+.vscode/
+.DS_Store
