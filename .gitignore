@@ -2,3 +2,5 @@
 /greatcart/static
 
 /.venv
+
+/db.sqlite3
