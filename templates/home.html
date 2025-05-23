@@ -27,14 +27,14 @@
                 {% for product in products %}
                     <div class="col-md-3">
                         <div class="card card-product-grid">
-                            <a href="{{ product.get_url }}" class="img-wrap">
+                            <a  class="img-wrap">
                                 <img width="100%"
                                      height="100%"
                                      alt="{{ product.product_name }}"
                                      src="{{ product.images.url }}">
                             </a>
                             <figcaption class="info-wrap">
-                                <a href="{{ product.get_url }}" class="title">{{ product.product_name }}</a>
+                                <a  class="title">{{ product.product_name }}</a>
                                 <div class="price mt-1">$ {{ product.price }}</div>
                                 <!-- price-wrap.// -->
                                 <div class="rating-star">
