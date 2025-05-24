@@ -28,14 +28,23 @@
         <!-- col.// -->
         <a href="" class="btn btn-outline-primary">Store</a>
         <div class="col-lg  col-md-6 col-sm-12 col">
-          <form action="" class="search" method='GET'>
-            <div class="input-group w-100">
+          <form action="{% url 'store' %}" class="search" method='get'>
+            <div class="relative input-group w-100">
               <input type="text"
                      class="form-control"
                      style="width:60%"
                      placeholder="Search"
-                     name="keyword"
+                     value="{{ request.GET.search }}"
+                     name="search"
                      required>
+              {% if request.GET.search %}
+                <a style="position: absolute;
+                          right: 50px;
+                          top: 8px"
+                   href="{% url 'store' %}">
+                  <i class="fa fa-times"></i>
+                </a>
+              {% endif %}
               <div class="input-group-append">
                 <button class="btn btn-primary" type="submit">
                   <i class="fa fa-search"></i>

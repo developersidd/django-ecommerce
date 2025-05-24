@@ -27,16 +27,16 @@
                 {% for product in products %}
                     <div class="col-md-3">
                         <div class="card card-product-grid">
-                            <a  class="img-wrap">
+                            <a href="{{ product.get_url }}" class="img-wrap">
                                 <img width="100%"
                                      height="100%"
                                      alt="{{ product.product_name }}"
                                      src="{{ product.images.url }}">
                             </a>
                             <figcaption class="info-wrap">
-                                <a  class="title">{{ product.product_name }}</a>
+                                <a href="{{ product.get_url }}" class="title">{{ product.product_name }}</a>
                                 <div class="price mt-1">$ {{ product.price }}</div>
-                                <!-- price-wrap.// -->
+                                {% comment %}<!-- price-wrap.// -->{% endcomment %}
                                 <div class="rating-star">
                                     <span>
                                         <i class="fa fa-star{% if product.averageReview < 0.5 %}-o{% elif product.averageReview >= 0.5 and product.averageReview < 1 %}-half-o {% endif %}"
