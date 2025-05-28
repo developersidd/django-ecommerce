@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from store.models import Product
 from .models import Cart, CartItem
+from carts.models import Variation
 import math
 import logging
 from django.shortcuts import get_object_or_404
@@ -41,6 +42,21 @@ def cart(request, total=0, quantity=0, cart_items=None):
 
 def add_cart(request, product_id):
     product = Product.objects.get(id=product_id)
+    product_varaitions = []
+    if request.method == "POST":
+        for item in request.POST:
+            key = item
+            value = request.POST[key]
+            try:
+                variation = Variation.objects.get(
+                    product=product,
+                    variation_category__iexact=key,
+                    variation_value__iexact=value,
+                )
+                product_varaitions.append(variation)
+
+            except:
+                pass
     try:
         cart = Cart.objects.get(
             cart_id=_cart_id(request)
@@ -50,13 +66,22 @@ def add_cart(request, product_id):
         cart = Cart.objects.create(cart_id=_cart_id(request))
         cart.save()
     try:
-        cartItem = CartItem.objects.get(product=product, cart=cart)
-        cartItem.quantity += 1
-        cartItem.save()
+        cart_item = CartItem.objects.get(product=product, cart=cart)
+        # if user again add the product into cart with different variatons then add those variations
+        if len(product_varaitions) > 0:
+            cart_item.variations.set(product_varaitions)
+        cart_item.quantity += 1
+        cart_item.save()
         return redirect("cart")
     except CartItem.DoesNotExist:
-        cartItem = CartItem.objects.create(cart=cart, product=product, quantity=1)
-        cartItem.save()
+        cart_item = CartItem.objects.create(
+            cart=cart,
+            product=product,
+            quantity=1,
+        )
+        if len(product_varaitions) > 0:
+            cart_item.variations.set(product_varaitions)
+        cart_item.save()
         return redirect("cart")
 
 

@@ -60,7 +60,10 @@ variation_category_choice = (
     ("color", "color"),
     ("size", "size"),
 )
+
+
 class Variation(models.Model):
+    # just because this django creates a reverse relation on the product called (product.variation_set) and for this we can access the colors and sizes in the (product_details.html) view. Also this reverse relation let you access the custom manger too.
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     variation_category = models.CharField(
         max_length=100, choices=variation_category_choice
