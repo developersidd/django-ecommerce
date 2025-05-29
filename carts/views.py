@@ -66,23 +66,25 @@ def add_cart(request, product_id):
         cart = Cart.objects.create(cart_id=_cart_id(request))
         cart.save()
     try:
-        cart_item = CartItem.objects.get(product=product, cart=cart)
-        # if user again add the product into cart with different variatons then add those variations
-        if len(product_varaitions) > 0:
-            cart_item.variations.set(product_varaitions)
-        cart_item.quantity += 1
-        cart_item.save()
-        return redirect("cart")
-    except CartItem.DoesNotExist:
-        cart_item = CartItem.objects.create(
-            cart=cart,
-            product=product,
-            quantity=1,
+        cart_item_in_cart = CartItem.objects.filter(
+            product=product, cart=cart, variations__in=product_varaitions
         )
-        if len(product_varaitions) > 0:
-            cart_item.variations.set(product_varaitions)
-        cart_item.save()
-        return redirect("cart")
+        if len(cart_item_in_cart) > 0:
+            cart_item_in_cart[0].quantity += 1
+            cart_item_in_cart[0].save()
+            return redirect("cart")
+        else:
+            cart_item = CartItem.objects.create(
+                cart=cart,
+                product=product,
+                quantity=1,
+            )
+            if len(product_varaitions) > 0:
+                cart_item.variations.set(product_varaitions)
+            cart_item.save()
+            return redirect("cart")
+    except Exception as e:
+        pass
 
 
 # Decrease cart item quantity
