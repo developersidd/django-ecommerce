@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from store.models import Product
 from .models import Cart, CartItem
+from django.core.exceptions import ObjectDoesNotExist
 from carts.models import Variation
 import math
 import logging
@@ -19,6 +20,8 @@ def _cart_id(request):
 
 # Create your views here.
 def cart(request, total=0, quantity=0, cart_items=None):
+    tax = 0
+    grand_total=0
     try:
         cart = Cart.objects.get(cart_id=_cart_id(request))
         cart_items = CartItem.objects.filter(cart=cart, is_active=True)
@@ -27,7 +30,7 @@ def cart(request, total=0, quantity=0, cart_items=None):
             quantity += cart_item.quantity
         tax = math.ceil((2 * total) / 100)
         grand_total = total + tax
-    except cart.DoesNotExist:
+    except ObjectDoesNotExist:
         pass
 
     context = {
