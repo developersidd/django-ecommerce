@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import RegistrationForm
 from .models import Account, UserProfile
+from .decorators import unauthenticated_user
 
 # from orders.models import Order, OrderProduct
 from django.contrib import messages, auth
@@ -22,13 +23,8 @@ from carts.models import Cart, CartItem
 
 
 # Register User
+@unauthenticated_user
 def register(request):
-    print(
-        "🐍 File: accounts/views.py | Line: 27 | register ~ request.user",
-        request.user.is_authenticated,
-    )
-    if request.user.is_authenticated:
-        return redirect("home")
     if request.method == "POST":
         form = RegistrationForm(request.POST)
         if form.is_valid():
@@ -72,10 +68,6 @@ def register(request):
             to_email = email
             send_email = EmailMessage(mail_subject, message, to=[to_email])
             send_email.send()
-            #messages.success(
-            #    request,
-            #    f"Thank you for registering with us. We have sent you a verification email to your email address [{email}]. Please verify it.",
-            #)
             return redirect(f"/accounts/login/?command=verification&email={email}")
 
     else:
@@ -85,8 +77,9 @@ def register(request):
 
 
 # Login User
+@unauthenticated_user
 def login(request):
-     if request.user.is_authenticated:
+    if request.user.is_authenticated:
         return redirect("home")
     if request.method == "POST":
         email = request.POST["email"]
@@ -95,7 +88,7 @@ def login(request):
         user = auth.authenticate(request, email=email, password=password)
         print("🐍 File: accounts/views.py | Line: 96 | login ~ user", user)
         auth.login(request, user)
-        return redirect("home")
+        return redirect("dashboard")
         if user != None:
             try:
                 cart = Cart.objects.get(cart_id=_cart_id(request))
@@ -130,6 +123,103 @@ def logout(request):
     return redirect("login")
 
 
+# Forgot Password
+@unauthenticated_user
+def forgotPassword(request):
+    if request.method == "POST":
+        email = request.POST["email"]
+        print("🐍 File: accounts/views.py | Line: 131 | forgotPassword ~ email", email)
+
+        if Account.objects.filter(email=email).exists():
+            user = Account.objects.get(email__exact=email)
+            # Send email for reset password
+            current_site = get_current_site(request)
+            mail_subject = "Please Reset your password"
+            message = render_to_string(
+                "accounts/reset_password_email.html",
+                {
+                    "user": user,
+                    "domain": current_site,
+                    "uid": urlsafe_base64_encode(force_bytes(user.pk)),
+                    "token": default_token_generator.make_token(user),
+                },
+            )
+            to_email = email
+            send_email = EmailMessage(mail_subject, message, to=[to_email])
+            send_email.send()
+            messages.success(
+                request, "Password reset email has been send to you email address"
+            )
+            return redirect("login")
+        else:
+
+            print(
+                "🐍 File: accounts/views.py | Line: 158 | forgotPassword ~ error",
+                "NOT EXIST",
+            )
+            messages.error(request, "Account doesn't exist!")
+            return redirect("forgotPassword")
+
+    return render(request, "accounts/forgotPassword.html")
+
+
+# Reset password
+@unauthenticated_user
+def resetpassword_validate(request, uidb64, token):
+    try:
+        uid = urlsafe_base64_decode(uidb64).decode()
+        user = Account._default_manager.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, Account.DoesNotExist):
+        user = None
+        token = ""
+    if user != None and default_token_generator.check_token(user, token):
+        request.session["uid"] = uid
+        messages.success(request, "Please reset you password")
+        return redirect("resetPassword")
+    else:
+        messages.error(request, "This link has expired!")
+        return redirect("login")
+
+
+# Reset password
+@unauthenticated_user
+def resetPassword(request):
+    if request.method == "POST":
+        password = request.POST["password"]
+        confirm_password = request.POST["confirm_password"]
+        if password != confirm_password:
+            messages.error(request,"Password and confirm password does not matched!")
+            return redirect("resetPassword")
+        else:
+            uid = request.session["uid"]
+            user = Account._default_manager.get(pk=uid)
+            user.set_password(password)
+            user.save()
+            messages.success(request, "Password reset successful")
+            return redirect("login")
+    else:
+        return render(request, "accounts/resetPassword.html")
+
+
 # Dashboard
+@login_required(login_url="login")
 def dashboard(request):
-    pass
+    return render(request, "accounts/dashboard.html")
+
+
+# My Orders
+@login_required(login_url="login")
+def my_orders(request):
+    return render(request, "accounts/my_orders.html")
+
+
+# My edit Profile
+@login_required(login_url="login")
+def edit_profile(request):
+    return render(request, "accounts/edit_profile.html")
+
+
+# Change Password
+@login_required(login_url="login")
+def change_password(request):
+    return render(request, "accounts/change_password.html")
