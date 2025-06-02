@@ -79,21 +79,48 @@ def register(request):
 # Login User
 @unauthenticated_user
 def login(request):
-    if request.user.is_authenticated:
-        return redirect("home")
     if request.method == "POST":
         email = request.POST["email"]
         password = request.POST["password"]
 
         user = auth.authenticate(request, email=email, password=password)
-        print("🐍 File: accounts/views.py | Line: 96 | login ~ user", user)
-        auth.login(request, user)
-        return redirect("dashboard")
         if user != None:
             try:
                 cart = Cart.objects.get(cart_id=_cart_id(request))
-            except:
+                is_cart_items_exists = CartItem.objects.filter(cart=cart).exists()
+                if is_cart_items_exists:
+                    # Getting the products which were added before sign in
+                    cart_items = CartItem.objects.filter(cart=cart)
+                    # variations of before logged In cart items
+                    product_variation_ids = []
+                    for item in cart_items:
+                        product_variation_ids = sorted(
+                            list(item.variations.values_list("id", flat=True))
+                        )
+                        # get variations of old user cart items
+                        ex_cart_items = CartItem.objects.filter(user=user)
+                        for ex_item in ex_cart_items:
+                            ex_variation_ids = sorted(
+                                list(ex_item.variations.values_list("id", flat=True))
+                            )
+                            # if old product variation exist in the new cart items then increase the quantity
+                            if product_variation_ids == ex_variation_ids:
+                                item.quantity += ex_item.quantity
+                                item.user = user
+                                item.save()
+                                ex_item.delete()
+                            else:
+                                item.user = user
+                                #ex_item = user
+                                #ex_item.save()
+                                item.save()
+                auth.login(request, user)
+            except Exception as e:
                 pass
+            auth.login(request, user)
+            messages.success(request, "You are logged in.")
+            return redirect("dashboard")
+
     return render(request, "accounts/login.html")
 
 
@@ -177,7 +204,7 @@ def resetpassword_validate(request, uidb64, token):
         messages.success(request, "Please reset you password")
         return redirect("resetPassword")
     else:
-        messages.error(request, "This link has expired!")
+        messages.error(request, "This link has been expired!")
         return redirect("login")
 
 
@@ -188,7 +215,7 @@ def resetPassword(request):
         password = request.POST["password"]
         confirm_password = request.POST["confirm_password"]
         if password != confirm_password:
-            messages.error(request,"Password and confirm password does not matched!")
+            messages.error(request, "Password and confirm password does not matched!")
             return redirect("resetPassword")
         else:
             uid = request.session["uid"]
