@@ -19,7 +19,7 @@ from django.core.mail import EmailMessage
 from carts.views import _cart_id
 from carts.models import Cart, CartItem
 
-# import requests
+import requests
 
 
 # Register User
@@ -111,16 +111,25 @@ def login(request):
                                 ex_item.delete()
                             else:
                                 item.user = user
-                                #ex_item = user
-                                #ex_item.save()
+                                # ex_item = user
+                                # ex_item.save()
                                 item.save()
                 auth.login(request, user)
             except Exception as e:
                 pass
             auth.login(request, user)
             messages.success(request, "You are logged in.")
-            return redirect("dashboard")
-
+            url = request.META.get("HTTP_REFERER")
+            try:
+                # 🐍 query.split('&') → ['next=/cart/checkout/']
+                # 🐍 query.split('=') → ['next', '/cart/checkout/']
+                query = requests.utils.urlparse(url).query
+                params = dict(x.split("=") for x in query.split("&"))
+                if "next" in params:
+                    nextPage = params["next"]
+                    return redirect(nextPage)
+            except Exception as e:
+                return redirect("dashboard")
     return render(request, "accounts/login.html")
 
 
