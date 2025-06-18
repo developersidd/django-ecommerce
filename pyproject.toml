@@ -9,4 +9,5 @@ dependencies = [
     "djlint>=1.36.4",
     "pillow>=11.2.1",
     "requests>=2.32.3",
+    "sslcommerz-lib>=1.0",
 ]

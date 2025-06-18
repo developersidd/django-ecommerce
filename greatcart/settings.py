@@ -77,7 +77,6 @@ TEMPLATES = [
 WSGI_APPLICATION = "greatcart.wsgi.application"
 
 AUTH_USER_MODEL = "accounts.Account"  # appname/modelname
-
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
@@ -87,6 +86,10 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+CSRF_TRUSTED_ORIGINS = [
+    "http://127.0.0.1:8000",
+    "http://localhost:8000"
+]
 
 
 # Password validation
@@ -143,6 +146,7 @@ MESSAGE_TAGS = {
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+ALLOWED_HOSTS = ['greatkart-course-env.eba-pepcery4.us-west-2.elasticbeanstalk.com', "*"]
 
 # SMTP configuration
 EMAIL_HOST = "smtp.gmail.com"

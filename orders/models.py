@@ -15,6 +15,20 @@ class Payment(models.Model):
         return self.payment_id
 
 
+class PaymentGatewaySettings(models.Model):
+
+    store_id = models.CharField(max_length=500, blank=True, null=True)
+    store_pass = models.CharField(max_length=500, blank=True, null=True)
+
+    class Meta:
+        verbose_name = "PaymentGatewaySetting"
+        verbose_name_plural = "PaymentGatewaySettings"
+        db_table = "paymentgatewaysettings"
+
+    def __str__(self):
+        return self.store_id
+
+
 class Order(models.Model):
 
     STATUS = (
