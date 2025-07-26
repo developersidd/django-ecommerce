@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .forms import RegistrationForm
 from .models import Account, UserProfile
 from .decorators import unauthenticated_user
+from orders.models import Order
 
 # from orders.models import Order, OrderProduct
 from django.contrib import messages, auth
@@ -246,7 +247,20 @@ def dashboard(request):
 # My Orders
 @login_required(login_url="login")
 def my_orders(request):
-    return render(request, "accounts/my_orders.html")
+    orders = Order.objects.filter(user=request.user, is_ordered=True).order_by(
+        "-created_at"
+    )
+    context = {"orders": orders}
+    return render(request, "accounts/my_orders.html", context)
+
+
+# order detail
+def order_detail(request, order_number):
+    order = Order.objects.get(order_number=order_number, user=request.user)
+    context = {
+        "order": order
+    }
+    return render(request, "accounts/order_detail.html", context)
 
 
 # My edit Profile

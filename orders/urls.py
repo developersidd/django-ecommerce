@@ -7,5 +7,5 @@ urlpatterns = [
     path("payment_success", views.payment_success, name="payment_success"),
     path("payment_validate", views.payment_validate, name="payment_validate"),
     path("order_complete", views.order_complete, name="order_complete"),
-    
+   
 ]
