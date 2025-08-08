@@ -6,6 +6,7 @@ from django.db.models import Avg, Count
 
 # Create your models here.
 
+
 class Product(models.Model):
     product_name = models.CharField(max_length=200, unique=True)
     slug = models.SlugField(max_length=200, unique=True)
@@ -25,8 +26,10 @@ class Product(models.Model):
         return self.product_name
 
     def averageReview(self):
-        reviews = ReviewRating.objects.filter(product=self, status=True).aggregate(average=Avg("rating"))
-        
+        reviews = ReviewRating.objects.filter(product=self, status=True).aggregate(
+            average=Avg("rating")
+        )
+
         avg = 0
         if reviews["average"] is not None:
             avg = float(reviews["average"])
@@ -92,6 +95,7 @@ class ReviewRating(models.Model):
 
 
 class ProductGallery(models.Model):
+
     product = models.ForeignKey(Product, default=None, on_delete=models.CASCADE)
     image = models.ImageField(upload_to="store/products", max_length=255)
 

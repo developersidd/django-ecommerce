@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .forms import RegistrationForm
+from .forms import RegistrationForm, UserForm, UserProfileForm
 from .models import Account, UserProfile
 from .decorators import unauthenticated_user
 from orders.models import Order
@@ -165,7 +165,6 @@ def logout(request):
 def forgotPassword(request):
     if request.method == "POST":
         email = request.POST["email"]
-        print("🐍 File: accounts/views.py | Line: 131 | forgotPassword ~ email", email)
 
         if Account.objects.filter(email=email).exists():
             user = Account.objects.get(email__exact=email)
@@ -190,14 +189,35 @@ def forgotPassword(request):
             return redirect("login")
         else:
 
-            print(
-                "🐍 File: accounts/views.py | Line: 158 | forgotPassword ~ error",
-                "NOT EXIST",
-            )
             messages.error(request, "Account doesn't exist!")
             return redirect("forgotPassword")
 
     return render(request, "accounts/forgotPassword.html")
+
+
+# Edit Profile
+@login_required(login_url="login")
+def edit_profile(request):
+    userprofile = get_object_or_404(UserProfile, user=request.user)
+    if request.method == "POST":
+        user_form = UserForm(request.POST, instance=request.user)
+        profile_form = UserProfileForm(
+            request.POST, request.FILES, instance=userprofile
+        )
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+            messages.success(request, "Your profile has been updated.")
+            return redirect("edit_profile")
+    else:
+        user_form = UserForm(instance=request.user)
+        profile_form = UserProfileForm(instance=userprofile)
+    context = {
+        "user_form": user_form,
+        "profile_form": profile_form,
+        "userprofile": userprofile,
+    }
+    return render(request, "accounts/edit_profile.html", context)
 
 
 # Reset password
@@ -241,7 +261,12 @@ def resetPassword(request):
 # Dashboard
 @login_required(login_url="login")
 def dashboard(request):
-    return render(request, "accounts/dashboard.html")
+    orders = Order.objects.order_by("-created_at").filter(
+        user=request.user.id, is_ordered=True
+    )
+    userprofile = UserProfile.objects.get(user_id=request.user.id)
+    context = {"orders_count": orders.count(), "userprofile": userprofile}
+    return render(request, "accounts/dashboard.html", context)
 
 
 # My Orders
@@ -254,22 +279,41 @@ def my_orders(request):
     return render(request, "accounts/my_orders.html", context)
 
 
-# order detail
-def order_detail(request, order_number):
-    order = Order.objects.get(order_number=order_number, user=request.user)
-    context = {
-        "order": order
-    }
-    return render(request, "accounts/order_detail.html", context)
-
-
-# My edit Profile
+# Order Detail
 @login_required(login_url="login")
-def edit_profile(request):
-    return render(request, "accounts/edit_profile.html")
+def order_detail(request, order_number):
+    try:
+        order = Order.objects.get(order_number=order_number, user=request.user)
+        context = {"order": order}
+        return render(request, "accounts/order_detail.html", context)
+    except Order.DoesNotExist:
+        messages.error(request, "The Order you looking for is currently unavailable")
+        return render(request, "accounts/order_detail.html")
 
 
 # Change Password
 @login_required(login_url="login")
 def change_password(request):
+    if request.method == "POST":
+        current_password = request.POST["current_password"]
+        new_password = request.POST["new_password"]
+        confirm_password = request.POST["confirm_password"]
+
+        user = Account.objects.get(username__exact=request.user.username)
+
+        if new_password == confirm_password:
+            isCurrentPasswordCorrect = user.check_password(current_password)
+            if isCurrentPasswordCorrect:
+                user.set_password(new_password)
+                user.save()
+                # auth.logout(request)
+                messages.success(request, "You passoword has been changed successfully")
+                return redirect("change_password")
+            else:
+                messages.error(request, "Please enter the valid current password")
+                return redirect("change_password")
+        else:
+            messages.error(request, "New password and confirm password doesn't matched")
+            return redirect("change_password")
+
     return render(request, "accounts/change_password.html")

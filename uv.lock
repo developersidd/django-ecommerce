@@ -105,11 +105,22 @@ wheels = [
 ]
 
 [[package]]
+name = "django-admin-thumbnails"
+version = "0.2.9"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+    { name = "six" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e0/04/e80a2f3bb42c8ecd5c450dd0725e90881264bd5ec67b6147f7555166d21a/django-admin-thumbnails-0.2.9.tar.gz", hash = "sha256:264ed1be50779108e3164006eff6bce9e2e41f584dc526a47bc99c9a98cb953e", size = 7983 }
+
+[[package]]
 name = "django-cart"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "django" },
+    { name = "django-admin-thumbnails" },
     { name = "djlint" },
     { name = "pillow" },
     { name = "requests" },
@@ -119,6 +130,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "django", specifier = ">=5.2.1" },
+    { name = "django-admin-thumbnails", specifier = ">=0.2.9" },
     { name = "djlint", specifier = ">=1.36.4" },
     { name = "pillow", specifier = ">=11.2.1" },
     { name = "requests", specifier = ">=2.32.3" },

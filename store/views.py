@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Product, ReviewRating
+from .models import Product, ReviewRating, ProductGallery
 from django.urls import reverse
 from category.models import Category
 from carts.models import CartItem
@@ -51,14 +51,15 @@ def store(request, category_slug=None):
 
 
 def product_detail(request, category_slug, product_slug):
-    print("🐍 File: store/views.py | Line: 53 |  ~ product_slug", product_slug)
-    print(
-        "🐍 File: store/views.py | Line: 53 |  ~ category_slug", category_slug
-    )
+    # print("🐍 File: store/views.py | Line: 53 |  ~ product_slug", product_slug)
+    # print(
+    #    "🐍 File: store/views.py | Line: 53 |  ~ category_slug", category_slug
+    # )
     try:
         single_product = Product.objects.get(
             category__slug=category_slug, slug=product_slug
         )
+
         in_cart = CartItem.objects.filter(
             cart__cart_id=_cart_id(request), product=single_product
         ).exists()
@@ -79,11 +80,12 @@ def product_detail(request, category_slug, product_slug):
     reviews = ReviewRating.objects.filter(product_id=single_product.id, status=True)
 
     # Get the product gallery
-    # product_gallery = ProductGallery.objects.filter(product_id=single_product.id)
+    product_gallery = ProductGallery.objects.filter(product=single_product)
 
     context = {
         "single_product": single_product,
         "in_cart": in_cart,
+        "product_gallery": product_gallery,
         "orderproduct": orderproduct,
         "reviews": reviews,
         #'product_gallery': product_gallery,
@@ -113,9 +115,9 @@ def submit_review(request, product_id):
             form = ReviewForm(request.POST, instance=review)
             form.save()
             messages.success(request, "Thank you! Your review has been updated.")
-            #return redirect(
+            # return redirect(
             #    reverse("product_detail", args=[product.category.slug, product.slug])
-            #)
+            # )
             return redirect(url)
 
         except ReviewRating.DoesNotExist:
@@ -131,10 +133,10 @@ def submit_review(request, product_id):
                 data.user_id = current_user.id
                 data.save()
                 messages.success(request, "Thank you! Your review has been submitted.")
-                
-                #return redirect(
+
+                # return redirect(
                 #    reverse(
                 #        "product_detail", args=[product.category.slug, product.slug]
                 #    )
-                #)
+                # )
                 return redirect(url)

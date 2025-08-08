@@ -3,6 +3,7 @@ from django import forms
 from .models import Account, UserProfile
 
 
+# Register Form
 class RegistrationForm(ModelForm):
     password = forms.CharField(
         widget=forms.PasswordInput(
@@ -42,3 +43,39 @@ class RegistrationForm(ModelForm):
 
             if field_name in placeholders:
                 field.widget.attrs["placeholder"] = placeholders[field_name]
+
+
+class UserForm(forms.ModelForm):
+    class Meta:
+        model = Account
+        fields = ("first_name", "last_name", "phone_number")
+
+    def __init__(self, *args, **kwargs):
+        super(UserForm, self).__init__(*args, **kwargs)
+        for field in self.fields:
+            self.fields[field].widget.attrs["class"] = "form-control"
+
+
+class UserProfileForm(forms.ModelForm):
+    # Remove Profile Picture Current path in form
+    profile_picture = forms.ImageField(
+        required=False,
+        error_messages={"invalid": ("Image files only")},
+        widget=forms.FileInput,
+    )
+
+    class Meta:
+        model = UserProfile
+        fields = (
+            "address_line_1",
+            "address_line_2",
+            "city",
+            "state",
+            "country",
+            "profile_picture",
+        )
+
+    def __init__(self, *args, **kwargs):
+        super(UserProfileForm, self).__init__(*args, **kwargs)
+        for field in self.fields:
+            self.fields[field].widget.attrs["class"] = "form-control"
